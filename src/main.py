@@ -3,6 +3,7 @@ from ldap3 import ALL, NTLM, Connection, Server, SUBTREE, Tls
 from ldap3.core.exceptions import LDAPBindError
 import ssl
 import socket
+import traceback
 
 def get_default_naming_context(server, conn):
     return server.info.other['defaultNamingContext'][0]
@@ -38,6 +39,7 @@ def get_connection(server, domain, user, password):
             )
     except Exception as e:
         print("2", e)
+        traceback.print_exc() 
         return None
     return conn
 
