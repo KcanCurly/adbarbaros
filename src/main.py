@@ -27,6 +27,7 @@ def get_connection(server, domain, user, password):
                 channel_binding="TLS_CHANNEL_BINDING",
                 auto_bind=True
             )
+            print("Connecting using ntlm - channel binding")
         except (ssl.SSLError, socket.error, LDAPBindError) as e:
             print("1", e)
             server = create_ldap_server(server, False)
@@ -37,6 +38,7 @@ def get_connection(server, domain, user, password):
                 authentication=NTLM,
                 auto_bind=True
             )
+            print("Connecting using ntlm")
     except Exception as e:
         print("2", e)
         traceback.print_exc() 
@@ -55,16 +57,17 @@ def main():
     if not conn:
         print("LDAP connection failed")
         return
-
-    # Discover schema naming context
+    
     conn.search(
-        search_base='',
-        search_filter='(objectClass=*)',
-        search_scope='BASE',
-        attributes=['schemaNamingContext']
+    search_base='',
+    search_filter='(objectClass=*)',
+    search_scope='BASE',
+    attributes=['*', '+']  # '+' gets operational attributes like schemaNamingContext
     )
 
-    schema_dn = conn.entries[0].schemaNamingContext.value
+    rootdse = conn.entries[0]
+
+    schema_dn = schema_dn = rootdse.schemaNamingContext.value
     print(f"[+] Schema DN: {schema_dn}")
 
     # --- Get all schema objects ---
