@@ -1738,7 +1738,7 @@ def crawl_website(start_url, max_workers=10):
 
                 for link in links:
                     if link not in visited:
-                        to_visit.add(link)
+                        crawl_website(link, max_workers)
     return visited
 
 
