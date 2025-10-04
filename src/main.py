@@ -4,6 +4,7 @@ from ldap3.core.exceptions import LDAPBindError
 import ssl
 import socket
 import traceback
+from src.utils import default_attributes, default_classes
 
 def get_default_naming_context(server, conn):
     return server.info.other['defaultNamingContext'][0]
@@ -97,11 +98,11 @@ def main():
 
     non_system_classes = [
         c for c in classes
-        if not re.match(r"^1\.2\.840\.113556\.", str(c.governsID))
+        if c not in default_classes
     ]
     non_system_attrs = [
         a for a in attributes
-        if not re.match(r"^1\.2\.840\.113556\.", str(a.attributeID))
+        if a not in default_attributes
     ]
 
     print(f"[!] Non-system classes: {len(non_system_classes)}")
