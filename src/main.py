@@ -24,22 +24,20 @@ def get_connection(server, domain, user, password):
                 password=password,
                 authentication=NTLM,
                 channel_binding="TLS_CHANNEL_BINDING",
+                auto_bind=True
             )
-            if not conn.bind():
-                raise LDAPBindError("Channel binding failed")
         except (ssl.SSLError, socket.error, LDAPBindError) as e:
-            print(e)
+            print("1", e)
             server = create_ldap_server(server, False)
             conn = Connection(
                 server,
                 user=f"{domain}\\{user}",
                 password=password,
-                authentication=NTLM
+                authentication=NTLM,
+                auto_bind=True
             )
-            if not conn.bind():
-                return None
     except Exception as e:
-        print(e)
+        print("2", e)
         return None
     return conn
 
