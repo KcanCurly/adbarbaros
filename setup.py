@@ -29,6 +29,7 @@ setup(
             "adbarbaros=src.main:main",  
             "adb=src.main:main",
             "adb-util=src.utils:retrieve_oids",
+            "gpoanalyzer=src.gpoanalyzer:main",
         ],
     },
 )
