@@ -67,6 +67,7 @@ def main():
     rootdse = conn.entries[0]
 
     schema_dn = rootdse.schemaNamingContext.value
+    print(schema_dn)
 
     conn.search(
         search_base=schema_dn,
