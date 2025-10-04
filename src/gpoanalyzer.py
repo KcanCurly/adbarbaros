@@ -60,9 +60,19 @@ def main():
         print("LDAP connection failed")
         return
     
-    gpo_base_dn = 'CN=Policies,CN=System,DC=example,DC=local'
     conn.search(
-        search_base=gpo_base_dn,
+        search_base='',
+        search_filter='(objectClass=*)',
+        search_scope='BASE',
+        attributes=['*', '+']  # '+' gets operational attributes like schemaNamingContext
+    )
+
+    rootdse = conn.entries[0]
+
+    schema_dn = schema_dn = rootdse.schemaNamingContext.value
+
+    conn.search(
+        search_base=schema_dn,
         search_filter='(objectClass=groupPolicyContainer)',
         attributes=['displayName', 'gPCFileSysPath', 'versionNumber']
     )
