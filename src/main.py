@@ -85,7 +85,8 @@ def main():
         search_base=schema_dn,
         search_filter='(objectClass=attributeSchema)',
         search_scope=SUBTREE,
-        attributes=['cn', 'attributeID']
+        attributes=['cn', 'attributeID'],
+        paged_size=1500,
     )
     attributes = conn.entries
 
