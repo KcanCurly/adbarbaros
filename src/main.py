@@ -87,7 +87,7 @@ def main():
         search_filter='(objectClass=attributeSchema)',
         search_scope=SUBTREE,
         attributes=['cn', 'attributeID'],
-        paged_size=1500,
+        paged_size=999,
     )
     attributes = conn.entries
 
@@ -98,11 +98,11 @@ def main():
 
     non_system_classes = [
         c for c in classes
-        if c not in default_classes
+        if c.cn not in default_classes
     ]
     non_system_attrs = [
         a for a in attributes
-        if a not in default_attributes
+        if a.cn not in default_attributes
     ]
 
     print(f"[!] Non-system classes: {len(non_system_classes)}")
