@@ -51,8 +51,7 @@ def main():
     parser.add_argument('--password', required=True, help='Password')
     args = parser.parse_args()
 
-    server = Server(args.host, get_info=ALL)
-    conn = get_connection(server, args.domain, args.username, args.password)
+    conn = get_connection(args.host, args.domain, args.username, args.password)
     if not conn:
         print("LDAP connection failed")
         return
