@@ -25,7 +25,8 @@ def get_connection(server, domain, user, password):
                 password=password,
                 authentication=NTLM,
                 channel_binding="TLS_CHANNEL_BINDING",
-                auto_bind=True
+                auto_bind=True,
+                auto_range=True,
             )
             print("Connecting using ntlm - channel binding")
         except (ssl.SSLError, socket.error, LDAPBindError) as e:
@@ -36,7 +37,8 @@ def get_connection(server, domain, user, password):
                 user=f"{domain}\\{user}",
                 password=password,
                 authentication=NTLM,
-                auto_bind=True
+                auto_bind=True,
+                auto_range=True,
             )
             print("Connecting using ntlm")
     except Exception as e:
@@ -59,10 +61,10 @@ def main():
         return
     
     conn.search(
-    search_base='',
-    search_filter='(objectClass=*)',
-    search_scope='BASE',
-    attributes=['*', '+']  # '+' gets operational attributes like schemaNamingContext
+        search_base='',
+        search_filter='(objectClass=*)',
+        search_scope='BASE',
+        attributes=['*', '+']  # '+' gets operational attributes like schemaNamingContext
     )
 
     rootdse = conn.entries[0]
