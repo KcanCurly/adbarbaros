@@ -1,8 +1,11 @@
+import threading
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse, urljoin
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
+import queue
+import time
 
 # Taken from https://learn.microsoft.com/en-us/windows/win32/adschema/attributes-all
 
@@ -1690,62 +1693,53 @@ default_classes = ["account",
 "Volume"]
 
 visited = set()
-lock = Lock()
+lock = threading.Lock()
 
-def fetch_links(url, domain):
+# Thread pool
+executor = ThreadPoolExecutor(max_workers=10)
+
+def handle_url(url):
+    """Fire-and-forget task: process a single URL"""
     try:
-        response = requests.get(url, timeout=15)
-        response.raise_for_status()
+        resp = requests.get(url, timeout=5)
+        resp.raise_for_status()
+        print(f"[+] Processed: {url} (length={len(resp.text)})")
+
+        # Example: find new links on this page
+        soup = BeautifulSoup(resp.text, "html.parser")
+        domain = urlparse(url).netloc
+        new_urls = set()
+        for tag in soup.find_all("a", href=True):
+            link = urljoin(url, tag["href"])
+            parsed = urlparse(link)
+            if parsed.netloc == domain:
+                clean_link = parsed.scheme + "://" + parsed.netloc + parsed.path
+                new_urls.add(clean_link)
+
+        # Add unseen URLs to processing
+        with lock:
+            for link in new_urls:
+                if link not in visited:
+                    print(link)
+                    visited.add(link)
+                    executor.submit(handle_url, link)  # fire-and-forget
+
     except Exception as e:
-        print(f"[!] Failed to fetch {url}: {e}")
-        return set()
-
-    soup = BeautifulSoup(response.text, "html.parser")
-    found_links = set()
-
-    for tag in soup.find_all("a", href=True):
-        link = urljoin(url, tag["href"])
-        parsed = urlparse(link)
-
-        # Stay within domain
-        if parsed.netloc != domain:
-            continue
-
-        clean_link = parsed.scheme + "://" + parsed.netloc + parsed.path
-        found_links.add(clean_link)
-
-    return found_links
+        print(f"[!] Failed to process {url}: {e}")
 
 
-def crawl_website(start_url, max_workers=10):
-    global visited
-    to_visit = {start_url}
-    domain = urlparse(start_url).netloc
-
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
-
-        futures = {executor.submit(fetch_links, url, domain): url for url in to_visit}
-        to_visit = set()  # reset for next wave
-
-        for future in as_completed(futures):
-            url = futures[future]
-            links = future.result()
-
-            with lock:
-                if url not in visited:
-                    visited.add(url)
-                    print(f"[+] Crawled: {url}")
-
-                for link in links:
-                    if link not in visited:
-                        crawl_website(link, max_workers)
-    return visited
 
 
 def retrieve_oids():
     start_url = "https://oidref.com"
-    all_links = crawl_website(start_url, max_workers=10)
+    visited.add(start_url)
 
-    print("\n=== Unique Links Found ===")
-    for link in sorted(all_links):
-        print(link)
+    # Thread pool
+    executor = ThreadPoolExecutor(max_workers=10)
+
+    # Fire-and-forget for the first URL
+    executor.submit(handle_url, start_url)
+
+    # Wait until all tasks finish
+    executor.shutdown(wait=True)
+    print("[+] Crawling complete")
