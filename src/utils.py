@@ -1697,6 +1697,7 @@ lock = threading.Lock()
 futures = set()  # track all submitted tasks
 
 def handle_url(url, executor):
+    global futures, lock, visited
     """Process a single URL and submit new tasks for newly found links."""
     try:
         resp = requests.get(url, timeout=5)
@@ -1727,8 +1728,10 @@ def handle_url(url, executor):
         print(f"[!] Failed to process {url}: {e}")
 
 def retrieve_oids():
+    global futures, lock, visited
     start_url = "https://oidref.com"
     visited.add(start_url)
+    
     # Thread pool
     with ThreadPoolExecutor(max_workers=10) as executor:
         # submit first task
