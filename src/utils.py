@@ -1,3 +1,9 @@
+import requests
+from bs4 import BeautifulSoup
+from urllib.parse import urlparse, urljoin
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from threading import Lock
+
 # Taken from https://learn.microsoft.com/en-us/windows/win32/adschema/attributes-all
 
 default_attributes = [
@@ -1682,3 +1688,64 @@ default_classes = ["account",
 "Type-Library",
 "User",
 "Volume"]
+
+visited = set()
+lock = Lock()
+
+def fetch_links(url, domain):
+    try:
+        response = requests.get(url, timeout=15)
+        response.raise_for_status()
+    except Exception as e:
+        print(f"[!] Failed to fetch {url}: {e}")
+        return set()
+
+    soup = BeautifulSoup(response.text, "html.parser")
+    found_links = set()
+
+    for tag in soup.find_all("a", href=True):
+        link = urljoin(url, tag["href"])
+        parsed = urlparse(link)
+
+        # Stay within domain
+        if parsed.netloc != domain:
+            continue
+
+        clean_link = parsed.scheme + "://" + parsed.netloc + parsed.path
+        found_links.add(clean_link)
+
+    return found_links
+
+
+def crawl_website(start_url, max_workers=10):
+    global visited
+    to_visit = {start_url}
+    domain = urlparse(start_url).netloc
+
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+
+        futures = {executor.submit(fetch_links, url, domain): url for url in to_visit}
+        to_visit = set()  # reset for next wave
+
+        for future in as_completed(futures):
+            url = futures[future]
+            links = future.result()
+
+            with lock:
+                if url not in visited:
+                    visited.add(url)
+                    print(f"[+] Crawled: {url}")
+
+                for link in links:
+                    if link not in visited:
+                        to_visit.add(link)
+    return visited
+
+
+def retrieve_oids():
+    start_url = "https://oidref.com"
+    all_links = crawl_website(start_url, max_workers=10)
+
+    print("\n=== Unique Links Found ===")
+    for link in sorted(all_links):
+        print(link)

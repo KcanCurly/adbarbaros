@@ -13,6 +13,8 @@ setup(
     install_requires=[
         "ldap3 @ git+https://github.com/cannatag/ldap3",
         "cryptography",
+        "bs4",
+        "requests",
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
@@ -25,7 +27,8 @@ setup(
     entry_points={
         "console_scripts": [
             "adbarbaros=src.main:main",  
-            "adb=src.main:main",  
+            "adb=src.main:main",
+            "adb-util=src.utils:retrieve_oids",
         ],
     },
 )
