@@ -112,10 +112,22 @@ def main():
         if a.cn not in default_attributes
     ]
 
+    # --- Filter out system OIDs ---
+    import re
+
+    non_system_classes = [
+        c for c in classes
+        if not re.match(r"^1\.2\.840\.113556\.", str(c.governsID))
+    ]
+    non_system_attrs = [
+        a for a in attributes
+        if not re.match(r"^1\.2\.840\.113556\.", str(a.attributeID))
+    ]
+
     print(f"[!] Non-system classes: {len(non_system_classes)}")
-    for c in non_system_classes:
-        print("  -", c.cn)
+    for c in non_system_classe:
+        print("  -", c.cn, "-", c.governsID)
 
     print(f"[!] Non-system attributes: {len(non_system_attrs)}")
     for a in non_system_attrs:
-        print("  -", a.cn)
+        print("  -", a.cn, "-", a.attributeID)
