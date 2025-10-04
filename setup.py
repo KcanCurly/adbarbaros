@@ -12,6 +12,7 @@ setup(
     include_package_data=True,
     install_requires=[
         "ldap3 @ git+https://github.com/cannatag/ldap3",
+        "cryptography",
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
