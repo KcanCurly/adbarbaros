@@ -1711,7 +1711,7 @@ def handle_url(url, executor):
     try:
         resp = requests.get(url, timeout=5)
         resp.raise_for_status()
-        print(f"{url})")
+        print(f"{url}")
 
         # find new URLs
         soup = BeautifulSoup(resp.text, "html.parser")
