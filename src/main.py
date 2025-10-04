@@ -101,26 +101,7 @@ def main():
         if not cookie:
             break
 
-    # conn.search(
-    #     search_base=schema_dn,
-    #     search_filter='(objectClass=attributeSchema)',
-    #     search_scope=SUBTREE,
-    #     attributes=['cn', 'attributeID'],
-    # )
-    # attributes = conn.entries
-# 
-    # conn.search(
-    #     search_base=schema_dn,
-    #     search_filter='(objectClass=attributeSchema)',
-    #     search_scope=SUBTREE,
-    #     attributes=['cn', 'attributeID'],
-    # )
-
-
     print(f"[+] Found {len(classes)} classes and {len(attributes)} attributes in schema")
-
-    # --- Filter out system OIDs ---
-    import re
 
     non_system_classes = [
         c for c in classes
@@ -132,9 +113,9 @@ def main():
     ]
 
     print(f"[!] Non-system classes: {len(non_system_classes)}")
-    for c in non_system_classes[:10]:
+    for c in non_system_classes:
         print("  -", c.cn)
 
     print(f"[!] Non-system attributes: {len(non_system_attrs)}")
-    for a in non_system_attrs[:10]:
+    for a in non_system_attrs:
         print("  -", a.cn)
