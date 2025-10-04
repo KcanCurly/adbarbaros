@@ -5,9 +5,6 @@ import ssl
 import socket
 import traceback
 
-def get_default_naming_context(server, conn):
-    return server.info.other['defaultNamingContext'][0]
-
 def create_ldap_server(server, use_ssl):
     if use_ssl:
         tls = Tls(validate=ssl.CERT_NONE)
@@ -69,7 +66,7 @@ def main():
 
     rootdse = conn.entries[0]
 
-    schema_dn = schema_dn = rootdse.schemaNamingContext.value
+    schema_dn = rootdse.schemaNamingContext.value
 
     conn.search(
         search_base=schema_dn,
