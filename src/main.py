@@ -87,9 +87,17 @@ def main():
         search_filter='(objectClass=attributeSchema)',
         search_scope=SUBTREE,
         attributes=['cn', 'attributeID'],
-        paged_size=999,
     )
     attributes = conn.entries
+
+    conn.search(
+        search_base=schema_dn,
+        search_filter='(objectClass=attributeSchema)',
+        search_scope=SUBTREE,
+        attributes=['cn', 'attributeID'],
+    )
+
+    attributes += conn.entries
 
     print(f"[+] Found {len(classes)} classes and {len(attributes)} attributes in schema")
 
