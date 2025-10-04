@@ -51,7 +51,9 @@ def main():
 
     server = Server(args.host, get_info=ALL)
     conn = get_connection(server, args.domain, args.username, args.password)
-    base_dn = get_default_naming_context(server, conn)
+    if not conn:
+        print("LDAP connection failed")
+        return
 
     # Discover schema naming context
     conn.search(
