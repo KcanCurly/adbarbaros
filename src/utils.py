@@ -3,9 +3,9 @@ import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse, urljoin
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from threading import Lock
-import queue
 import time
+import signal
+import sys
 
 # Taken from https://learn.microsoft.com/en-us/windows/win32/adschema/attributes-all
 
@@ -1695,14 +1695,23 @@ default_classes = ["account",
 visited = set()
 lock = threading.Lock()
 futures = set()  # track all submitted tasks
+stop_crawling = False  # flag to stop all tasks
+
+def starts_with_number(path):
+    """Return True if the first path component starts with a number."""
+    parts = path.lstrip("/").split("/", 1)
+    return parts[0] and parts[0][0].isdigit()
 
 def handle_url(url, executor):
-    global futures, lock, visited
+    global futures, lock, visited, stop_crawling
     """Process a single URL and submit new tasks for newly found links."""
+
+    if stop_crawling:
+        return
     try:
         resp = requests.get(url, timeout=5)
         resp.raise_for_status()
-        print(f"[+] Processed: {url} (length={len(resp.text)})")
+        print(f"{url})")
 
         # find new URLs
         soup = BeautifulSoup(resp.text, "html.parser")
@@ -1713,13 +1722,14 @@ def handle_url(url, executor):
             parsed = urlparse(link)
             if parsed.netloc == domain:
                 clean_link = parsed.scheme + "://" + parsed.netloc + parsed.path
+                if not starts_with_number(parsed.path):
+                    continue  # skip non-numeric paths
                 new_urls.add(clean_link)
 
         # submit tasks for unseen URLs
         with lock:
             for link in new_urls:
                 if link not in visited:
-                    print(link)
                     visited.add(link)
                     future = executor.submit(handle_url, link, executor)
                     futures.add(future)
@@ -1727,8 +1737,19 @@ def handle_url(url, executor):
     except Exception as e:
         print(f"[!] Failed to process {url}: {e}")
 
+def signal_handler(sig, frame):
+    global stop_crawling
+    print("\n[!] CTRL+C detected! Stopping crawler...")
+    stop_crawling = True
+    sys.exit(0)
+
+
+
 def retrieve_oids():
     global futures, lock, visited
+
+    signal.signal(signal.SIGINT, signal_handler)
+
     start_url = "https://oidref.com"
     visited.add(start_url)
     
@@ -1747,6 +1768,8 @@ def retrieve_oids():
                 else:
                     not_done.add(f)
             futures = not_done
+            if stop_crawling:
+                break
             time.sleep(0.1)  # avoid busy waiting
 
     print("[+] Crawling complete")
