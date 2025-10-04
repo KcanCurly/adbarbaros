@@ -91,6 +91,7 @@ def main():
             search_filter='(objectClass=attributeSchema)',
             search_scope=SUBTREE,
             attributes=['cn', 'attributeID'],
+            paged_size=1000,
             paged_cookie=cookie,
         )
 
