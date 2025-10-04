@@ -1740,6 +1740,4 @@ def retrieve_oids():
     # Fire-and-forget for the first URL
     executor.submit(handle_url, start_url)
 
-    # Wait until all tasks finish
-    executor.shutdown(wait=True)
     print("[+] Crawling complete")
