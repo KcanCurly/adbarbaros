@@ -125,7 +125,7 @@ def main():
     ]
 
     print(f"[!] Non-system classes: {len(non_system_classes)}")
-    for c in non_system_classe:
+    for c in non_system_classes:
         print("  -", c.cn, "-", c.governsID)
 
     print(f"[!] Non-system attributes: {len(non_system_attrs)}")
