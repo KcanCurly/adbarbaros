@@ -82,22 +82,39 @@ def main():
     )
     classes = conn.entries
 
-    conn.search(
-        search_base=schema_dn,
-        search_filter='(objectClass=attributeSchema)',
-        search_scope=SUBTREE,
-        attributes=['cn', 'attributeID'],
-    )
-    attributes = conn.entries
+    cookie = None
+    attributes = []
 
-    conn.search(
-        search_base=schema_dn,
-        search_filter='(objectClass=attributeSchema)',
-        search_scope=SUBTREE,
-        attributes=['cn', 'attributeID'],
-    )
+    while True:
+        conn.search(
+            search_base=schema_dn,
+            search_filter='(objectClass=attributeSchema)',
+            search_scope=SUBTREE,
+            attributes=['cn', 'attributeID'],
+            paged_cookie=cookie,
+        )
 
-    attributes += conn.entries
+        attributes.extend(conn.entries)
+        cookie = conn.result["controls"].get("1.2.840.113556.1.4.319", {}).get("value", {}).get("cookie")
+
+        if not cookie:
+            break
+
+    # conn.search(
+    #     search_base=schema_dn,
+    #     search_filter='(objectClass=attributeSchema)',
+    #     search_scope=SUBTREE,
+    #     attributes=['cn', 'attributeID'],
+    # )
+    # attributes = conn.entries
+# 
+    # conn.search(
+    #     search_base=schema_dn,
+    #     search_filter='(objectClass=attributeSchema)',
+    #     search_scope=SUBTREE,
+    #     attributes=['cn', 'attributeID'],
+    # )
+
 
     print(f"[+] Found {len(classes)} classes and {len(attributes)} attributes in schema")
 
