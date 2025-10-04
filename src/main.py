@@ -90,3 +90,23 @@ def main():
     attributes = conn.entries
 
     print(f"[+] Found {len(classes)} classes and {len(attributes)} attributes in schema")
+
+    # --- Filter out system OIDs ---
+    import re
+
+    non_system_classes = [
+        c for c in classes
+        if not re.match(r"^1\.2\.840\.113556\.", str(c.governsID))
+    ]
+    non_system_attrs = [
+        a for a in attributes
+        if not re.match(r"^1\.2\.840\.113556\.", str(a.attributeID))
+    ]
+
+    print(f"[!] Non-system classes: {len(non_system_classes)}")
+    for c in non_system_classes[:10]:
+        print("  -", c.cn)
+
+    print(f"[!] Non-system attributes: {len(non_system_attrs)}")
+    for a in non_system_attrs[:10]:
+        print("  -", a.cn)
