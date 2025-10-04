@@ -1694,18 +1694,16 @@ default_classes = ["account",
 
 visited = set()
 lock = threading.Lock()
+futures = set()  # track all submitted tasks
 
-# Thread pool
-executor = ThreadPoolExecutor(max_workers=10)
-
-def handle_url(url):
-    """Fire-and-forget task: process a single URL"""
+def handle_url(url, executor):
+    """Process a single URL and submit new tasks for newly found links."""
     try:
         resp = requests.get(url, timeout=5)
         resp.raise_for_status()
         print(f"[+] Processed: {url} (length={len(resp.text)})")
 
-        # Example: find new links on this page
+        # find new URLs
         soup = BeautifulSoup(resp.text, "html.parser")
         domain = urlparse(url).netloc
         new_urls = set()
@@ -1716,28 +1714,36 @@ def handle_url(url):
                 clean_link = parsed.scheme + "://" + parsed.netloc + parsed.path
                 new_urls.add(clean_link)
 
-        # Add unseen URLs to processing
+        # submit tasks for unseen URLs
         with lock:
             for link in new_urls:
                 if link not in visited:
                     print(link)
                     visited.add(link)
-                    executor.submit(handle_url, link)  # fire-and-forget
+                    future = executor.submit(handle_url, link, executor)
+                    futures.add(future)
 
     except Exception as e:
         print(f"[!] Failed to process {url}: {e}")
 
-
-
-
 def retrieve_oids():
     start_url = "https://oidref.com"
     visited.add(start_url)
-
     # Thread pool
-    executor = ThreadPoolExecutor(max_workers=10)
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        # submit first task
+        future = executor.submit(handle_url, start_url, executor)
+        futures.add(future)
 
-    # Fire-and-forget for the first URL
-    executor.submit(handle_url, start_url)
+        # wait for all tasks, including dynamically created ones
+        while futures:
+            done, not_done = set(), set()
+            for f in futures:
+                if f.done():
+                    done.add(f)
+                else:
+                    not_done.add(f)
+            futures = not_done
+            time.sleep(0.1)  # avoid busy waiting
 
     print("[+] Crawling complete")
