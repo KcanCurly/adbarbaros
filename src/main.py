@@ -28,6 +28,7 @@ def get_connection(server, domain, user, password):
             if not conn.bind():
                 raise LDAPBindError("Channel binding failed")
         except (ssl.SSLError, socket.error, LDAPBindError) as e:
+            print(e)
             server = create_ldap_server(server, False)
             conn = Connection(
                 server,
@@ -38,6 +39,7 @@ def get_connection(server, domain, user, password):
             if not conn.bind():
                 return None
     except Exception as e:
+        print(e)
         return None
     return conn
 
